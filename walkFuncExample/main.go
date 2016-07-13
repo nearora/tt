@@ -6,6 +6,18 @@ import (
 	"os"
 )
 
+func addFilenameToList(fileList *[]string) filepath.WalkFunc {
+	return func(path string, info os.FileInfo, _ error) error {
+		if info.IsDir() {
+			fmt.Println("Descending in ", path)
+		} else {
+			*fileList = append(*fileList, path)
+		}
+
+		return nil
+	}
+}
+
 func main() {
 	searchPaths := os.Args[1:]
 
@@ -17,17 +29,7 @@ func main() {
 	var fileList []string
 
 	for _, s := range searchPaths {
-		err :=
-			filepath.Walk(s, func(path string, info os.FileInfo, _ error) error {
-				if info.IsDir() {
-					fmt.Println("Descending in ", path)
-				} else {
-					fileList = append(fileList, path)
-				}
-
-				return nil
-			})
-
+		err := filepath.Walk(s, addFilenameToList(&fileList))
 		if err != nil {
 			fmt.Println("Error when walking ", s, ": ", err)
 		}
