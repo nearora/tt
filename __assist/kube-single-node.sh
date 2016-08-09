@@ -48,6 +48,8 @@ elif [ "$1x" = "startx" ] ; then
 	export ARCH=amd64
 	export GOOS=linux
 	export GOARCH=$ARCH
+
+	manifestsVolume=${PWD}/$(dirname $0)"/etc/kubernetes/manifests"
 	
 	docker run -d \
 	    --volume=/:/rootfs:ro \
@@ -55,6 +57,7 @@ elif [ "$1x" = "startx" ] ; then
 	    --volume=/var/lib/docker/:/var/lib/docker:rw \
 	    --volume=/var/lib/kubelet/:/var/lib/kubelet:rw \
 	    --volume=/var/run:/var/run:rw \
+	    --volume=${manifestsVolume}:/etc/kubernetes/manifests:ro \
 	    --net=host \
 	    --pid=host \
 	    --privileged \
