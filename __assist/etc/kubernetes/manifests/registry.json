@@ -1,0 +1,20 @@
+{
+  "apiVersion": "v1",
+  "kind": "Pod",
+  "metadata": {"name":"local-registry"},
+  "spec": {
+    "hostNetwork": true,
+    "containers": [
+      {
+        "name": "registry",
+        "image": "docker.io/registry:2",
+        "command": [],
+        "ports": [
+           {
+              "containerPort": 5000
+           }
+        ]
+      }
+    ]
+  }
+}
