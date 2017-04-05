@@ -35,6 +35,10 @@ elif [ "$1x" = "stopx" ] ; then
 				echo "Some containers still running. Check and re-run command if needed."
 			fi
 		fi
+	
+		docker rmi registry:kube-single-node	
+		docker rmi etcd:kube-single-node
+		docker rmi hyperkube:kube-single-node
 	fi
 elif [ "$1x" = "startx" ] ; then
 	if [ $(numContainers) -ge 1 ] ; then
@@ -44,10 +48,20 @@ elif [ "$1x" = "startx" ] ; then
 
 	echo -n "Starting containerized single node Kubernetes... "
 
-	export K8S_VERSION=v1.2.1
-	export ARCH=amd64
+	export REGISTRY_IMAGE=docker.io/registry:2
+	export ETCD_IMAGE=gcr.io/google_containers/etcd:2.2.1
+	export K8S_IMAGE=gcr.io/google_containers/hyperkube-amd64:v1.2.1
 	export GOOS=linux
-	export GOARCH=$ARCH
+	export GOARCH=amd64
+
+	docker pull ${REGISTRY_IMAGE}
+	docker tag  ${REGISTRY_IMAGE} registry:kube-single-node
+
+	docker pull ${ETCD_IMAGE}
+	docker tag  ${ETCD_IMAGE} etcd:kube-single-node
+
+	docker pull ${K8S_IMAGE}
+	docker tag  ${K8S_IMAGE} hyperkube:kube-single-node
 
 	manifestsVolume=${PWD}/$(dirname $0)"/etc/kubernetes/manifests"
 	
@@ -61,7 +75,7 @@ elif [ "$1x" = "startx" ] ; then
 	    --net=host \
 	    --pid=host \
 	    --privileged \
-	    gcr.io/google_containers/hyperkube-${ARCH}:${K8S_VERSION} \
+	    hyperkube:kube-single-node \
 	    /hyperkube kubelet \
 	        --containerized \
 	        --hostname-override=127.0.0.1 \
@@ -72,6 +86,9 @@ elif [ "$1x" = "startx" ] ; then
 
 	if [ $? -ne 0 ] ; then
 		echo "failed!"
+		docker rmi registry:kube-single-node	
+		docker rmi etcd:kube-single-node
+		docker rmi hyperkube:kube-single-node
 		exit 1
 	fi
 
@@ -79,7 +96,7 @@ elif [ "$1x" = "startx" ] ; then
 	
 	if [ -d $HOME/bin ] ; then
 		if [ ! -x $HOME/bin/kubectl ] ; then
-			curl -sSL http://storage.googleapis.com/kubernetes-release/release/${K8S_VERSION}/bin/${GOOS}/${GOARCH}/kubectl > $HOME/bin/kubectl
+			curl -L https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/${GOOS}/${GOARCH}/kubectl > $HOME/bin/kubectl
 			chmod +x $HOME/bin/kubectl
 		fi
 	fi
